@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>ArchFin AI: BIM MPT Urban Optimize</Name>
+    <Assembly>ArchFinAI\ArchFinAI.Backend.dll</Assembly>
+    <FullClassName>ArchFinAI.Backend.App</FullClassName>
+    <ClientId>B3FD1763-6262-4155-B4D0-E717243D72E0</ClientId>
+    <VendorId>ARCHFIN</VendorId>
+    <VendorDescription>ArchFin AI Computational Urban Layout Engine, https://archfin.ai</VendorDescription>
+  </AddIn>
+</RevitAddIns>

@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <Configurations>Debug;Release</Configurations>
+    <AssemblyName>ArchFinAI.Backend</AssemblyName>
+    <RootNamespace>ArchFinAI.Backend</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>Principal Computational Architectural Architect</Authors>
+    <Company>ArchFin AI Solutions</Company>
+    <Description>Revit 2027 External Application built on Nice3point framework with real-time MPT agent sync pipeline</Description>
+  </PropertyGroup>
+
+  <!-- Revit 2027 Nice3point Framework & API Package References -->
+  <ItemGroup>
+    <!-- Nice3point Revit Toolkit for Revit 2027 (.NET 8) -->
+    <PackageReference Include="Nice3point.Revit.Toolkit" Version="2027.0.0" />
+    <PackageReference Include="Nice3point.Revit.Extensions" Version="2027.0.0" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2027.0.0" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.0.0" />
+    
+    <!-- Utility & JSON serialization -->
+    <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ArchFinAI.addin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Post-Build target to automate deployment to Revit 2027 Addins directory -->
+  <Target Name="DeployToRevitAddins" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <PropertyGroup>
+      <RevitAddinsDir>$(APPDATA)\Autodesk\Revit\Addins\2027</RevitAddinsDir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Deploying ArchFin AI Add-in to $(RevitAddinsDir)..." />
+    <Copy SourceFiles="ArchFinAI.addin" DestinationFolder="$(RevitAddinsDir)" ContinueOnError="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RevitAddinsDir)\ArchFinAI" ContinueOnError="true" />
+  </Target>
+
+</Project>

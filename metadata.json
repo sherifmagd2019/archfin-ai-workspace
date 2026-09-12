@@ -1,0 +1,6 @@
+{
+  "name": "ArchFin AI: BIM MPT Urban Optimize",
+  "description": "Computational architectural engineering and multi-agent AI ecosystem integrating Modern Portfolio Theory (MPT) financial layout engineering with Autodesk Revit 2027 BIM modeling via Nice3point.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
