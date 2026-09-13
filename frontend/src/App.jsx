@@ -6,8 +6,19 @@ import UrbanLayoutVisualizer from './components/UrbanLayoutVisualizer';
 import RevitSyncStatusBadge from './components/RevitSyncStatusBadge';
 import BlueprintCodeViewer from './components/BlueprintCodeViewer';
 import ResearchPaperModal from './components/ResearchPaperModal';
+import InterAgentDialogueViewer from './components/InterAgentDialogueViewer';
 import { downloadPaperPdf } from './utils/generatePaperPdf';
-import { Building, Code2, LayoutDashboard, Cpu, Award, BookOpen, Download, FileText } from 'lucide-react';
+import {
+  Building,
+  Code2,
+  LayoutDashboard,
+  Cpu,
+  Award,
+  BookOpen,
+  Download,
+  FileText,
+  MessageSquare
+} from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -24,7 +35,8 @@ export default function App() {
     marketInput: "Rapid construction steel price inflation paired with retail cooling trends.",
     statusText: "Ready",
     currentStep: 0,
-    syncStatus: 'idle'
+    syncStatus: 'idle',
+    dialogue: []
   });
 
   const [simulatedSync, setSimulatedSync] = useState(true);
@@ -103,7 +115,24 @@ export default function App() {
               }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Live Optimization Dashboard</span>
+              <span>Optimization Dashboard</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('dialogue')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'dialogue'
+                  ? 'bg-[#89b4fa] text-[#11111b] shadow'
+                  : 'text-[#a6adc8] hover:text-[#cdd6f4]'
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Inter-Agent Dialogue</span>
+              {pipelineState.dialogue?.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#313244] text-[#cdd6f4] font-mono">
+                  {pipelineState.dialogue.length}
+                </span>
+              )}
             </button>
             <button
               type="button"
@@ -115,7 +144,7 @@ export default function App() {
               }`}
             >
               <Code2 className="w-3.5 h-3.5" />
-              <span>Revit 2027 Nice3point Blueprint</span>
+              <span>Revit 2027 Blueprint</span>
             </button>
             <button
               type="button"
@@ -149,12 +178,13 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {activeTab === 'dashboard' ? (
+        {activeTab === 'dashboard' && (
           <>
             {/* Multi-Agent Topology Visualizer */}
             <AgentPipelineFlow
               currentStep={pipelineState.currentStep}
               industrialRiskScale={pipelineState.industrialRiskScale}
+              selectedModel={pipelineState.selectedModel}
             />
 
             {/* Dashboard 2-Column Grid */}
@@ -177,7 +207,30 @@ export default function App() {
 
               {/* Right Column: Physical BIM Massing Simulator & MPT Math Matrix */}
               <div className="lg:col-span-6 space-y-6">
-                <UrbanLayoutVisualizer allocations={pipelineState.allocations} />
+                <UrbanLayoutVisualizer
+                  allocations={pipelineState.allocations}
+                  onAllocationsChange={(newAllocations) => {
+                    setPipelineState(prev => ({
+                      ...prev,
+                      allocations: newAllocations,
+                      lastPayload: prev.lastPayload ? {
+                        ...prev.lastPayload,
+                        residential: newAllocations.Res,
+                        commercial: newAllocations.Comm,
+                        industrial: newAllocations.Ind,
+                        alertText: "Interactive Mass Floor Stacking Adjustment"
+                      } : {
+                        residential: newAllocations.Res,
+                        commercial: newAllocations.Comm,
+                        industrial: newAllocations.Ind,
+                        alertText: "Interactive Mass Floor Stacking Adjustment",
+                        targetFar: 4.5,
+                        sharpeRatio: 1.84,
+                        timestamp: new Date().toISOString()
+                      }
+                    }));
+                  }}
+                />
 
                 <MPTEfficientFrontier
                   allocations={pipelineState.allocations}
@@ -187,54 +240,47 @@ export default function App() {
               </div>
             </div>
           </>
-        ) : (
+        )}
+
+        {/* Dedicated Inter-Agent Dialogue & Conversation View */}
+        {activeTab === 'dialogue' && (
           <div className="space-y-6">
-            <div className="bg-[#1e1e2e] border border-[#313244] p-5 rounded-xl">
-              <h2 className="text-base font-bold text-[#cdd6f4] mb-1">
-                Autodesk Revit 2027 Add-in Architecture Specification
+            <div className="bg-[#181825] p-5 rounded-xl border border-[#313244]">
+              <h2 className="text-base font-bold text-[#cdd6f4] mb-1 flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-[#89b4fa]" />
+                <span>Inter-Agent Deliberation & Negotiation Transcript</span>
               </h2>
-              <p className="text-xs text-[#a6adc8] leading-relaxed">
-                The backend workspace is cleanly partitioned into <code className="text-[#89b4fa]">backend/</code> (C#/.NET 8 Nice3point Revit 2027 external application) and <code className="text-[#a6e3a1]">frontend/</code> (JavaScript React financial layout dashboard). Inspect the production-grade source files below, deployable directly into Revit 2027.
+              <p className="text-xs text-[#a6adc8]">
+                Watch how the <strong>Macro-Inference</strong>, <strong>Quantitative MPT</strong>, <strong>Adversarial Inspector</strong>, <strong>Executive Explainer</strong>, and <strong>Revit Dispatcher</strong> agents debate, challenge zoning constraints, penalize covariance matrices, and reach multi-objective equilibrium.
               </p>
             </div>
 
+            <InterAgentDialogueViewer
+              dialogue={pipelineState.dialogue}
+              isRunning={false}
+            />
+          </div>
+        )}
+
+        {/* Revit Nice3point C# Blueprint Tab */}
+        {activeTab === 'blueprint' && (
+          <div className="space-y-6">
             <BlueprintCodeViewer />
 
-            {/* Workspace Directory Structure */}
-            <div className="bg-[#1e1e2e] border border-[#313244] p-5 rounded-xl">
-              <h3 className="text-xs uppercase font-bold tracking-wider text-[#a6adc8] mb-3">
-                Workspace Directory Partitioning
-              </h3>
-              <div className="bg-[#11111b] p-4 rounded-lg font-mono text-xs text-[#cdd6f4] space-y-1 overflow-x-auto">
-                <div>📁 <span className="text-[#89b4fa] font-bold">backend/</span> (Autodesk Revit 2027 Nice3point C#/.NET 8 Add-in)</div>
-                <div className="pl-4">├── 📄 ArchFinAI.Backend.csproj (Targets net8.0-windows, Nice3point.Revit.Toolkit 2027.0.0)</div>
-                <div className="pl-4">├── 📄 ArchFinAI.addin (Revit 2027 Addin Manifest)</div>
-                <div className="pl-4">├── 📄 App.cs (Nice3point RevitApplication with HttpListener :8080)</div>
-                <div className="pl-4">├── 📁 Commands/</div>
-                <div className="pl-8">├── 📄 LaunchDashboardCommand.cs (Launches browser to React frontend)</div>
-                <div className="pl-8">└── 📄 ShowDockablePaneCommand.cs (Toggles live telemetry DockablePane)</div>
-                <div className="pl-4">├── 📁 Models/</div>
-                <div className="pl-8">└── 📄 UrbanAllocationPayload.cs (Residential, Commercial, Industrial weights)</div>
-                <div className="pl-4">├── 📁 Services/</div>
-                <div className="pl-8">└── 📄 RevitModelUpdater.cs (Thread-safe IExternalEventHandler & Transactions)</div>
-                <div className="pl-4">├── 📁 Views/</div>
-                <div className="pl-8">├── 📄 AgentDashboardDockablePane.xaml (WPF Contextual Dashboard)</div>
-                <div className="pl-8">└── 📄 AgentDashboardDockablePane.xaml.cs (IDockablePaneProvider code-behind)</div>
-                <div className="pl-4">├── 📄 install-addin.ps1 (One-click build & deploy PowerShell script)</div>
-                <div className="pl-4">└── 📄 README.md (Technical architecture & thread safety guidelines)</div>
-                <div className="mt-2">📁 <span className="text-[#a6e3a1] font-bold">frontend/</span> (JavaScript React Financial Layout Engineering Dashboard)</div>
-                <div className="pl-4">├── 📄 package.json (mathjs, react, lucide-react)</div>
-                <div className="pl-4">├── 📄 vite.config.js (Vite server port 3000)</div>
-                <div className="pl-4">├── 📄 index.html</div>
-                <div className="pl-4">├── 📁 src/</div>
-                <div className="pl-8">├── 📄 main.jsx (React 19 entry point)</div>
-                <div className="pl-8">├── 📄 App.jsx</div>
-                <div className="pl-8">├── 📁 components/</div>
-                <div className="pl-12">├── 📄 AgentControlCenter.jsx (MPT Math & Revit Sync fetch)</div>
-                <div className="pl-12">├── 📄 AgentPipelineFlow.jsx (3-step multi-agent diagram)</div>
-                <div className="pl-12">├── 📄 MPTEfficientFrontier.jsx (Covariance matrix & Sharpe ratio)</div>
-                <div className="pl-12">├── 📄 UrbanLayoutVisualizer.jsx (3D Mass floors & parcel zoning)</div>
-                <div className="pl-12">└── 📄 RevitSyncStatusBadge.jsx (Listener ping & payload spec)</div>
+            <div className="bg-[#181825] p-5 rounded-xl border border-[#313244] text-xs space-y-3">
+              <h4 className="font-bold text-[#cdd6f4] text-sm">ArchFin AI Repository Blueprint Topology</h4>
+              <p className="text-[#a6adc8] leading-relaxed">
+                The solution uses an asynchronous loop between React and Revit 2027:
+              </p>
+              <div className="font-mono bg-[#11111b] p-3 rounded-lg border border-[#313244] text-[#89b4fa] space-y-1">
+                <div>├── 📁 backend-api/ (Express.js Multi-Agent Orchestration Server)</div>
+                <div className="pl-4">├── 📁 src/agents/ (MacroInference, MPT, AdversarialInspector, Explainer)</div>
+                <div className="pl-4">└── 📁 src/routes/ (optimize.js, health.js)</div>
+                <div>├── 📁 backend/ (Autodesk Revit 2027 C# Plugin via Nice3point)</div>
+                <div className="pl-4">├── 📄 ArchFin.Revit.csproj (Target: net8.0-windows, Revit 2027 SDK)</div>
+                <div className="pl-4">└── 📁 Commands/RevitSyncCommand.cs (Background HttpListener on :8080)</div>
+                <div>├── 📁 frontend/ (React 19, Tailwind CSS, Lucide icons)</div>
+                <div className="pl-4">├── 📁 components/ (AgentControlCenter, UrbanLayoutVisualizer, etc.)</div>
                 <div className="pl-4">└── 📄 README.md (MPT linear algebra & Nebius/OpenAI swap guide)</div>
               </div>
             </div>
