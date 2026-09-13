@@ -4,7 +4,8 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>false</UseWindowsForms>
     <OutputType>Library</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- Autodesk Revit 2027 runs on .NET 10 (net10.0-windows7.0) -->
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -18,17 +19,16 @@
     <Description>Revit 2027 External Application built on Nice3point framework with real-time MPT agent sync pipeline</Description>
   </PropertyGroup>
 
-  <!-- Revit 2027 Nice3point Framework & API Package References -->
+  <!-- Revit 2027 Nice3point Framework & API Package References (.NET 10) -->
   <ItemGroup>
-    <!-- Nice3point Revit Toolkit for Revit 2027 (.NET 8) -->
     <PackageReference Include="Nice3point.Revit.Toolkit" Version="2027.0.0" />
-    <PackageReference Include="Nice3point.Revit.Extensions" Version="2027.0.0" />
-    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2027.0.0" />
-    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.0.0" />
+    <PackageReference Include="Nice3point.Revit.Extensions" Version="2027.0.4" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2027.2.0" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2027.2.0" />
     
     <!-- Utility & JSON serialization -->
     <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

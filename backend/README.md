@@ -1,6 +1,6 @@
 # ArchFin AI: Backend (Revit 2027 Add-in)
 
-Computational architectural engineering backend for Autodesk Revit 2027, powered by .NET 8 and the [Nice3point](https://github.com/Nice3point) Revit API framework templates.
+Computational architectural engineering backend for Autodesk Revit 2027, powered by .NET 10 and the [Nice3point](https://github.com/Nice3point) Revit API framework templates.
 
 ## Architecture Overview
 
@@ -41,9 +41,10 @@ Computational architectural engineering backend for Autodesk Revit 2027, powered
 ## Building & Installation
 
 ### Prerequisites
-- .NET 8 SDK (x64)
+- **For Revit 2027**: .NET 10 SDK (x64) — Nice3point 2027 packages target `net10.0-windows7.0`
+- **For Revit 2025/2026**: .NET 8 SDK (x64) — use Nice3point 2025.x packages with `net8.0-windows7.0`
 - Autodesk Revit 2027
-- Visual Studio 2022 or JetBrains Rider with .NET desktop development workload
+- Visual Studio 2022 (v17.12+) or Visual Studio 2025 / JetBrains Rider with .NET desktop development workload
 
 ### Quick Deploy via PowerShell
 ```powershell
@@ -55,4 +56,12 @@ Computational architectural engineering backend for Autodesk Revit 2027, powered
 dotnet restore
 dotnet build -c Release
 ```
-Then copy `ArchFinAI.addin` and `bin/Release/net8.0-windows/*` into `%APPDATA%\Autodesk\Revit\Addins\2027\ArchFinAI\`.
+Then copy `ArchFinAI.addin` and `bin/Release/net10.0-windows7.0/*` into `%APPDATA%\Autodesk\Revit\Addins\2027\ArchFinAI\`.
+
+### Troubleshooting NU1202 Error
+If Visual Studio reports:
+> `NU1202: Package Nice3point.Revit.Api.RevitAPI 2027.x.x is not compatible with net8.0-windows7.0. Package supports: net10.0-windows7.0`
+
+This occurs when the project's `<TargetFramework>` is set to `net8.0-windows` while referencing Nice3point 2027 packages.
+- **Fix for Revit 2027**: Ensure `<TargetFramework>net10.0-windows7.0</TargetFramework>` is set in `ArchFinAI.Backend.csproj` and the .NET 10 SDK is installed.
+- **Fix for Revit 2025 on .NET 8**: If building for Revit 2025, keep `<TargetFramework>net8.0-windows7.0</TargetFramework>` and change the PackageReferences from `2027.*` to `2025.*`.

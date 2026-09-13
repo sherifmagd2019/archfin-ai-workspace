@@ -22,16 +22,16 @@
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net8.0-windows"
+          "net8.0-windows7.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0-windows": {
+          "net8.0-windows7.0": {
             "framework": "net8.0-windows7.0",
-            "targetAlias": "net8.0-windows",
+            "targetAlias": "net8.0-windows7.0",
             "projectReferences": {}
           }
         },
@@ -48,9 +48,9 @@
         "SdkAnalysisLevel": "10.0.400"
       },
       "frameworks": {
-        "net8.0-windows": {
+        "net8.0-windows7.0": {
           "framework": "net8.0-windows7.0",
-          "targetAlias": "net8.0-windows",
+          "targetAlias": "net8.0-windows7.0",
           "dependencies": {
             "JetBrains.Annotations": {
               "target": "Package",
@@ -58,19 +58,19 @@
             },
             "Nice3point.Revit.Api.RevitAPI": {
               "target": "Package",
-              "version": "[2027.0.0, )"
+              "version": "[2027.*, )"
             },
             "Nice3point.Revit.Api.RevitAPIUI": {
               "target": "Package",
-              "version": "[2027.0.0, )"
+              "version": "[2027.*, )"
             },
             "Nice3point.Revit.Extensions": {
               "target": "Package",
-              "version": "[2027.0.0, )"
+              "version": "[2027.*, )"
             },
             "Nice3point.Revit.Toolkit": {
               "target": "Package",
-              "version": "[2027.0.0, )"
+              "version": "[2027.*, )"
             },
             "System.Text.Json": {
               "target": "Package",

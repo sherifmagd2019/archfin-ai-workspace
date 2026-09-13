@@ -1,20 +1,31 @@
 {
   "version": 2,
-  "dgSpecHash": "P2qcnnj7NIs=",
+  "dgSpecHash": "KvcpwoqVuIY=",
   "success": false,
   "projectFilePath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Sherif\\.nuget\\packages\\jetbrains.annotations\\2024.2.0\\jetbrains.annotations.2024.2.0.nupkg.sha512",
-    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.api.revitapi\\2027.0.0\\nice3point.revit.api.revitapi.2027.0.0.nupkg.sha512",
-    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.api.revitapiui\\2027.0.0\\nice3point.revit.api.revitapiui.2027.0.0.nupkg.sha512",
-    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.extensions\\2027.0.0\\nice3point.revit.extensions.2027.0.0.nupkg.sha512",
+    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.api.revitapi\\2027.2.0\\nice3point.revit.api.revitapi.2027.2.0.nupkg.sha512",
+    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.api.revitapiui\\2027.2.0\\nice3point.revit.api.revitapiui.2027.2.0.nupkg.sha512",
+    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.extensions\\2027.0.4\\nice3point.revit.extensions.2027.0.4.nupkg.sha512",
     "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.toolkit\\2027.0.0\\nice3point.revit.toolkit.2027.0.0.nupkg.sha512",
     "C:\\Users\\Sherif\\.nuget\\packages\\system.text.json\\8.0.5\\system.text.json.8.0.5.nupkg.sha512",
-    "C:\\Users\\Sherif\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.30\\microsoft.netcore.app.ref.8.0.30.nupkg.sha512",
     "C:\\Users\\Sherif\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.30\\microsoft.windowsdesktop.app.ref.8.0.30.nupkg.sha512",
+    "C:\\Users\\Sherif\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.30\\microsoft.netcore.app.ref.8.0.30.nupkg.sha512",
     "C:\\Users\\Sherif\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.30\\microsoft.aspnetcore.app.ref.8.0.30.nupkg.sha512"
   ],
   "logs": [
+    {
+      "code": "NU1202",
+      "level": "Error",
+      "message": "Package Nice3point.Revit.Api.RevitAPIUI 2027.2.0 is not compatible with net8.0-windows7.0 (.NETCoreApp,Version=v8.0). Package Nice3point.Revit.Api.RevitAPIUI 2027.2.0 supports: net10.0-windows7.0 (.NETCoreApp,Version=v10.0)",
+      "projectPath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
+      "filePath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
+      "libraryId": "Nice3point.Revit.Api.RevitAPIUI",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
     {
       "code": "NU1202",
       "level": "Error",
@@ -23,40 +34,29 @@
       "filePath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
       "libraryId": "Nice3point.Revit.Toolkit",
       "targetGraphs": [
-        "net8.0-windows"
+        "net8.0-windows7.0"
       ]
     },
     {
       "code": "NU1202",
       "level": "Error",
-      "message": "Package Nice3point.Revit.Extensions 2027.0.0 is not compatible with net8.0-windows7.0 (.NETCoreApp,Version=v8.0). Package Nice3point.Revit.Extensions 2027.0.0 supports: net10.0-windows7.0 (.NETCoreApp,Version=v10.0)",
-      "projectPath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
-      "filePath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
-      "libraryId": "Nice3point.Revit.Extensions",
-      "targetGraphs": [
-        "net8.0-windows"
-      ]
-    },
-    {
-      "code": "NU1202",
-      "level": "Error",
-      "message": "Package Nice3point.Revit.Api.RevitAPI 2027.0.0 is not compatible with net8.0-windows7.0 (.NETCoreApp,Version=v8.0). Package Nice3point.Revit.Api.RevitAPI 2027.0.0 supports: net10.0-windows7.0 (.NETCoreApp,Version=v10.0)",
+      "message": "Package Nice3point.Revit.Api.RevitAPI 2027.2.0 is not compatible with net8.0-windows7.0 (.NETCoreApp,Version=v8.0). Package Nice3point.Revit.Api.RevitAPI 2027.2.0 supports: net10.0-windows7.0 (.NETCoreApp,Version=v10.0)",
       "projectPath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
       "filePath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
       "libraryId": "Nice3point.Revit.Api.RevitAPI",
       "targetGraphs": [
-        "net8.0-windows"
+        "net8.0-windows7.0"
       ]
     },
     {
       "code": "NU1202",
       "level": "Error",
-      "message": "Package Nice3point.Revit.Api.RevitAPIUI 2027.0.0 is not compatible with net8.0-windows7.0 (.NETCoreApp,Version=v8.0). Package Nice3point.Revit.Api.RevitAPIUI 2027.0.0 supports: net10.0-windows7.0 (.NETCoreApp,Version=v10.0)",
+      "message": "Package Nice3point.Revit.Extensions 2027.0.4 is not compatible with net8.0-windows7.0 (.NETCoreApp,Version=v8.0). Package Nice3point.Revit.Extensions 2027.0.4 supports: net10.0-windows7.0 (.NETCoreApp,Version=v10.0)",
       "projectPath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
       "filePath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
-      "libraryId": "Nice3point.Revit.Api.RevitAPIUI",
+      "libraryId": "Nice3point.Revit.Extensions",
       "targetGraphs": [
-        "net8.0-windows"
+        "net8.0-windows7.0"
       ]
     }
   ]
