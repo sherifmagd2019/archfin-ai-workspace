@@ -8,7 +8,7 @@ using Nice3point.Revit.Toolkit.External;
 namespace ArchFinAI.Backend.Commands
 {
     [Transaction(TransactionMode.Manual)]
-    public class ShowDockablePaneCommand : RevitCommand
+    public class ShowDockablePaneCommand : ExternalCommand
     {
         public override void Execute()
         {

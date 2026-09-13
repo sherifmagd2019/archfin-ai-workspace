@@ -9,7 +9,7 @@ using Nice3point.Revit.Toolkit.External;
 namespace ArchFinAI.Backend.Commands
 {
     [Transaction(TransactionMode.Manual)]
-    public class LaunchDashboardCommand : RevitCommand
+    public class LaunchDashboardCommand : ExternalCommand
     {
         public override void Execute()
         {

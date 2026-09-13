@@ -19,16 +19,16 @@ Computational architectural engineering backend for Autodesk Revit 2027, powered
 
 ### Key Components
 
-1. **`App.cs` (`RevitApplication`)**:
+1. **`App.cs` (`ExternalApplication`)**:
    - Nice3point Application entry point.
    - Registers custom Ribbon Tab `"ArchFin Agent"` and `"Agentic Controls"` panel.
    - Registers non-modal `AgentDashboardDockablePane` (`DockablePaneId`).
    - Starts asynchronous background `HttpListener` on `http://localhost:8080/revit-sync/` with full CORS preflight support.
 
-2. **`Commands/LaunchDashboardCommand.cs` (`RevitCommand`)**:
+2. **`Commands/LaunchDashboardCommand.cs` (`ExternalCommand`)**:
    - Nice3point Ribbon PushButton action that launches the default web browser to the React dashboard (`http://localhost:3000`).
 
-3. **`Commands/ShowDockablePaneCommand.cs` (`RevitCommand`)**:
+3. **`Commands/ShowDockablePaneCommand.cs` (`ExternalCommand`)**:
    - Ribbon PushButton action that toggles visibility of the live agent telemetry dockable pane.
 
 4. **`Services/RevitModelUpdater.cs` (`IExternalEventHandler`)**:

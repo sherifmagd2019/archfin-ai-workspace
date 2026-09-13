@@ -16,7 +16,7 @@ using ArchFinAI.Backend.Views;
 namespace ArchFinAI.Backend
 {
     [UsedImplicitly]
-    public class App : RevitApplication
+    public class App : ExternalApplication
     {
         private HttpListener? _listener;
         private bool _listening = true;
