@@ -14,7 +14,7 @@ namespace ArchFinAI.Backend.Commands
         {
             try
             {
-                var dockablePane = UiApplication.GetDockablePane(App.PaneId);
+                var dockablePane = Application.GetDockablePane(App.PaneId);
                 if (dockablePane != null)
                 {
                     if (dockablePane.IsShown())

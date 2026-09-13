@@ -7,6 +7,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
 using JetBrains.Annotations;
+using Nice3point.Revit.Extensions;
+using Nice3point.Revit.Toolkit.Context;
 using Nice3point.Revit.Toolkit.External;
 using ArchFinAI.Backend.Commands;
 using ArchFinAI.Backend.Models;
@@ -37,9 +39,7 @@ namespace ArchFinAI.Backend
             RegisterDockablePane();
 
             // 3. Create Ribbon UI using Nice3point context wrappers
-            var tabName = "ArchFin Agent";
-            CreateRibbonTab(tabName);
-            var panel = CreateRibbonPanel(tabName, "Agentic Controls");
+            var panel = Application.CreatePanel("Agentic Controls", "ArchFin Agent");
 
             panel.AddPushButton<LaunchDashboardCommand>("Launch\nDashboard")
                  .SetLargeImage("/ArchFinAI.Backend;component/Resources/dashboard_32.png")
@@ -58,7 +58,7 @@ namespace ArchFinAI.Backend
             try
             {
                 DockablePaneView = new AgentDashboardDockablePane();
-                UiApplication.RegisterDockablePane(PaneId, "ArchFin: Live Agent Telemetry", DockablePaneView);
+                Application.RegisterDockablePane(PaneId, "ArchFin: Live Agent Telemetry", DockablePaneView);
             }
             catch (Exception ex)
             {
