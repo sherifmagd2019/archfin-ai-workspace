@@ -49,14 +49,50 @@ namespace ArchFinAI.Backend
             }
 
             var panel = Application.CreateRibbonPanel(tabName, "Agentic Controls");
+            var assemblyPath = typeof(App).Assembly.Location;
 
-            panel.AddPushButton<LaunchDashboardCommand>("Launch\nDashboard")
-                 .SetLargeImage("/ArchFinAI.Backend;component/Resources/dashboard_32.png")
-                 .SetToolTip("Launch the ArchFin React MPT Optimization Web Dashboard in your browser.");
+            var launchBtnData = new PushButtonData(
+                "LaunchDashboardBtn",
+                "Launch\nDashboard",
+                assemblyPath,
+                typeof(LaunchDashboardCommand).FullName
+            )
+            {
+                ToolTip = "Launch the ArchFin React MPT Optimization Web Dashboard in your browser."
+            };
 
-            panel.AddPushButton<ShowDockablePaneCommand>("Agent\nInspector")
-                 .SetLargeImage("/ArchFinAI.Backend;component/Resources/inspector_32.png")
-                 .SetToolTip("Toggle the live ArchFin Agent WPF Contextual Telemetry Dockable Pane.");
+            var inspectorBtnData = new PushButtonData(
+                "AgentInspectorBtn",
+                "Agent\nInspector",
+                assemblyPath,
+                typeof(ShowDockablePaneCommand).FullName
+            )
+            {
+                ToolTip = "Toggle the live ArchFin Agent WPF Contextual Telemetry Dockable Pane."
+            };
+
+            try
+            {
+                launchBtnData.LargeImage = new System.Windows.Media.Imaging.BitmapImage(
+                    new Uri("pack://application:,,,/ArchFinAI.Backend;component/Resources/dashboard_32.png", UriKind.Absolute));
+            }
+            catch
+            {
+                // Fallback if icon resource pack URI is not present
+            }
+
+            try
+            {
+                inspectorBtnData.LargeImage = new System.Windows.Media.Imaging.BitmapImage(
+                    new Uri("pack://application:,,,/ArchFinAI.Backend;component/Resources/inspector_32.png", UriKind.Absolute));
+            }
+            catch
+            {
+                // Fallback if icon resource pack URI is not present
+            }
+
+            panel.AddItem(launchBtnData);
+            panel.AddItem(inspectorBtnData);
 
             // 4. Spin up an asynchronous background thread for receiving layout payloads from React frontend
             StartLocalServer();
