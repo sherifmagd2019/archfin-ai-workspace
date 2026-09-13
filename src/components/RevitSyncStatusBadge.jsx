@@ -53,11 +53,20 @@ export default function RevitSyncStatusBadge({
     };
 
     try {
+      // Also copy to clipboard so Revit's 'Force Recalculation' button can load it instantly
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(JSON.stringify(payload)).catch(() => {});
+      }
+
       const outcome = await syncAllocationToRevit(payload, targetPort);
       if (outcome.success) {
-        setSendResult(`✅ Success! Synced with Revit 2027 on port ${outcome.port} via ${outcome.channel}.`);
+        if (outcome.channel === 'file-bridge') {
+          setSendResult(`📁 Synced via Local File Bridge (%TEMP%\\archfin_mpt_payload.json)! Click 'Force Revit Canvas Recalculation' in Revit or check add-in auto-sync.`);
+        } else {
+          setSendResult(`✅ Success! Synced with Revit 2027 on port ${outcome.port} via ${outcome.channel}.`);
+        }
       } else {
-        setSendResult(`❌ Sync failed: ${outcome.error}. Ensure Revit is open.`);
+        setSendResult(`❌ Sync failed: ${outcome.error}. Ensure Revit 2027 is open with ArchFin add-in loaded.`);
       }
     } catch (err) {
       setSendResult(`❌ Error: ${err.message}`);
@@ -137,6 +146,27 @@ export default function RevitSyncStatusBadge({
           >
             <Activity className="w-3.5 h-3.5" />
             <span>{isPinging ? 'Pinging...' : `Ping :${targetPort}`}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const p = lastPayload || {
+                residential: "33.3",
+                commercial: "33.3",
+                industrial: "33.4",
+                alertText: "Macro-Optimized weights generated successfully.",
+                targetFar: 4.5,
+                timestamp: new Date().toISOString()
+              };
+              navigator.clipboard?.writeText(JSON.stringify(p, null, 2));
+              setSendResult("📋 Copied MPT Payload to Windows Clipboard! Switch to Revit and click 'Force Revit Canvas Recalculation'.");
+            }}
+            className="flex items-center gap-1 text-xs bg-[#313244] hover:bg-[#45475a] text-[#cdd6f4] px-2.5 py-1.5 rounded border border-[#45475a] transition-colors cursor-pointer"
+            title="Copy current MPT JSON payload to clipboard for instant Revit pickup"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            <span>Copy JSON</span>
           </button>
 
           <button

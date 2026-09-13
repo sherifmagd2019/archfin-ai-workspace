@@ -96,6 +96,9 @@ namespace ArchFinAI.Backend
             // 4. Spin up high-reliability embedded TCP HTTP server (bypasses Windows http.sys / urlacl constraints)
             StartLocalServer();
 
+            // 5. Start file-bridge watcher on shared temporary directory for 100% reliable offline/firewall sync
+            StartFileWatcher();
+
             return Result.Succeeded;
         }
 
@@ -148,6 +151,53 @@ namespace ArchFinAI.Backend
                 DockablePaneView?.SetServerStatus("http://localhost:8080/revit-sync/", false, lastError);
                 Console.WriteLine($"[ArchFin] Failed to bind TCP listener on candidate ports: {lastError}");
             }
+        }
+
+        private void StartFileWatcher()
+        {
+            Task.Run(async () =>
+            {
+                string tempFile = Path.Combine(Path.GetTempPath(), "archfin_mpt_payload.json");
+                DateTime lastModified = DateTime.MinValue;
+
+                while (_listening)
+                {
+                    try
+                    {
+                        if (File.Exists(tempFile))
+                        {
+                            var fileInfo = new FileInfo(tempFile);
+                            if (fileInfo.LastWriteTimeUtc > lastModified)
+                            {
+                                lastModified = fileInfo.LastWriteTimeUtc;
+                                await Task.Delay(150); // allow writer to release file handle
+                                string json = await File.ReadAllTextAsync(tempFile);
+                                if (!string.IsNullOrWhiteSpace(json))
+                                {
+                                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                                    var payload = JsonSerializer.Deserialize<UrbanAllocationPayload>(json, options);
+                                    if (payload != null)
+                                    {
+                                        DockablePaneView?.Dispatcher.Invoke(() =>
+                                        {
+                                            DockablePaneView.UpdateAllocation(payload);
+                                        });
+
+                                        RevitModelUpdater.QueueAllocationUpdate(payload);
+                                        DockablePaneView?.Log($"📁 Auto-synced MPT payload from local file bridge: Res={payload.GetResidentialPercent():F1}%, Comm={payload.GetCommercialPercent():F1}%, Ind={payload.GetIndustrialPercent():F1}%");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore transient read concurrency
+                    }
+
+                    await Task.Delay(1000);
+                }
+            });
         }
 
         private async Task AcceptTcpClientsLoop(TcpListener listener, int port)

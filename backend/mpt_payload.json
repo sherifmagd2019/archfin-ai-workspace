@@ -1,0 +1,6 @@
+{
+  "residentialWeight": 68.9,
+  "commercialWeight": 18.5,
+  "industrialWeight": 12.6,
+  "alertText": "Test MPT Payload"
+}

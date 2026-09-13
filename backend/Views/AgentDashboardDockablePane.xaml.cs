@@ -93,15 +93,76 @@ namespace ArchFinAI.Backend.Views
 
         private void BtnApplyToCanvas_Click(object sender, RoutedEventArgs e)
         {
+            if (_lastPayload == null)
+            {
+                TryLoadFromSharedFileOrClipboard();
+            }
+
             if (_lastPayload != null)
             {
                 RevitModelUpdater.QueueAllocationUpdate(_lastPayload);
                 TxtConsoleLog.AppendText($"\n[{DateTime.Now:HH:mm:ss}] Dispatched manual update transaction to active Revit document.");
+                TxtConsoleLog.ScrollToEnd();
             }
             else
             {
-                TxtConsoleLog.AppendText($"\n[{DateTime.Now:HH:mm:ss}] No remote MPT allocation cached yet.");
+                TxtConsoleLog.AppendText($"\n[{DateTime.Now:HH:mm:ss}] No remote MPT allocation found in cache, temp file, or clipboard.");
+                TxtConsoleLog.ScrollToEnd();
             }
+        }
+
+        private bool TryLoadFromSharedFileOrClipboard()
+        {
+            // 1. Try local shared temp file
+            try
+            {
+                string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "archfin_mpt_payload.json");
+                if (System.IO.File.Exists(tempFile))
+                {
+                    string json = System.IO.File.ReadAllText(tempFile);
+                    if (!string.IsNullOrWhiteSpace(json))
+                    {
+                        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var payload = System.Text.Json.JsonSerializer.Deserialize<UrbanAllocationPayload>(json, options);
+                        if (payload != null)
+                        {
+                            UpdateAllocation(payload);
+                            Log($"📁 Loaded MPT allocation from local temp file: {tempFile}");
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"File read warning: {ex.Message}");
+            }
+
+            // 2. Try Windows Clipboard
+            try
+            {
+                if (System.Windows.Clipboard.ContainsText())
+                {
+                    string clipText = System.Windows.Clipboard.GetText().Trim();
+                    if (clipText.StartsWith("{") && clipText.EndsWith("}"))
+                    {
+                        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var payload = System.Text.Json.JsonSerializer.Deserialize<UrbanAllocationPayload>(clipText, options);
+                        if (payload != null && (payload.GetResidentialPercent() > 0 || payload.GetCommercialPercent() > 0 || payload.GetIndustrialPercent() > 0))
+                        {
+                            UpdateAllocation(payload);
+                            Log($"📋 Loaded MPT allocation from Windows Clipboard!");
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Clipboard read warning: {ex.Message}");
+            }
+
+            return false;
         }
     }
 }

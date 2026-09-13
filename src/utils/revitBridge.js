@@ -183,13 +183,23 @@ export async function syncAllocationToRevit(payload, preferredPort = 8080) {
 
       if (res.ok) {
         const data = await res.json();
-        return {
-          success: true,
-          port,
-          channel: 'node-proxy-relay',
-          url: `http://localhost:${port}/revit-sync/`,
-          data
-        };
+        if (data.relayed) {
+          return {
+            success: true,
+            port,
+            channel: 'node-proxy-relay',
+            url: `http://localhost:${port}/revit-sync/`,
+            data
+          };
+        } else if (data.savedToFile) {
+          return {
+            success: true,
+            port,
+            channel: 'file-bridge',
+            notice: data.notice || 'Saved to %TEMP%\\archfin_mpt_payload.json for Revit auto-sync',
+            data
+          };
+        }
       }
     } catch (proxyErr) {
       lastError = proxyErr;
