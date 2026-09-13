@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Network, Copy, Check } from 'lucide-react';
+import { Network, Copy, Check, Send, Activity, HelpCircle, ExternalLink } from 'lucide-react';
+import { pingRevitBridge, syncAllocationToRevit } from '../utils/revitBridge';
 
 export default function RevitSyncStatusBadge({
   lastPayload,
@@ -10,41 +11,71 @@ export default function RevitSyncStatusBadge({
   const [copied, setCopied] = useState(false);
   const [pingResult, setPingResult] = useState(null);
   const [isPinging, setIsPinging] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
   const [showPayload, setShowPayload] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [targetPort, setTargetPort] = useState(8080);
 
   const testConnection = async () => {
     setIsPinging(true);
-    setPingResult("Connecting to http://localhost:8080/revit-sync/ ...");
+    setPingResult(`Checking Revit 2027 bridge on port ${targetPort}...`);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-      const res = await fetch("http://localhost:8080/revit-sync/", {
-        method: "OPTIONS",
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        setPingResult("Revit 2027 Nice3point HttpListener online on port 8080!");
+      const outcome = await pingRevitBridge(targetPort);
+      if (outcome.online) {
+        setPingResult(`✅ Revit 2027 Bridge ONLINE on port ${outcome.port} (mode: ${outcome.mode})`);
+        if (outcome.port !== targetPort) {
+          setTargetPort(outcome.port);
+        }
       } else {
-        setPingResult(`HTTP ${res.status}: Connected, server responded.`);
+        setPingResult(
+          `⚠️ Revit Add-in not responding on port ${targetPort} or fallback ports. Ensure Revit 2027 is open with ArchFin add-in loaded.`
+        );
       }
-    } catch {
-      setPingResult("Revit Add-in not responding on localhost:8080. Using Virtual Revit mode.");
+    } catch (err) {
+      setPingResult(`⚠️ Connection error: ${err.message}`);
     } finally {
       setIsPinging(false);
     }
   };
 
-  const curlCommand = `curl -X POST http://localhost:8080/revit-sync/ \\
+  const dispatchToRevit = async () => {
+    setIsSending(true);
+    setSendResult(`Transmitting allocation payload to Revit 2027...`);
+    const payload = lastPayload || {
+      residential: "33.3",
+      commercial: "33.3",
+      industrial: "33.4",
+      alertText: "Manual trigger from ArchFin Web Dashboard",
+      targetFar: 4.5,
+      sharpeRatio: 1.88,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      const outcome = await syncAllocationToRevit(payload, targetPort);
+      if (outcome.success) {
+        setSendResult(`✅ Success! Synced with Revit 2027 on port ${outcome.port} via ${outcome.channel}.`);
+      } else {
+        setSendResult(`❌ Sync failed: ${outcome.error}. Ensure Revit is open.`);
+      }
+    } catch (err) {
+      setSendResult(`❌ Error: ${err.message}`);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const curlCommand = `curl -X POST http://localhost:${targetPort}/revit-sync/ \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(
     lastPayload || {
       residential: "33.3",
       commercial: "33.3",
       industrial: "33.4",
-      alertText: "Macro-Optimized weights generated successfully."
+      alertText: "Macro-Optimized weights generated successfully.",
+      targetFar: 4.5,
+      timestamp: new Date().toISOString()
     }
   )}'`;
 
@@ -55,19 +86,19 @@ export default function RevitSyncStatusBadge({
   };
 
   return (
-    <div className="bg-[#1e1e2e] border border-[#313244] rounded-xl p-5 shadow-lg">
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+    <div className="bg-[#1e1e2e] border border-[#313244] rounded-xl p-5 shadow-lg space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 bg-[#cba6f7]/15 text-[#cba6f7] rounded-md">
             <Network className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#cdd6f4]">Revit 2027 Process Lifetime Bridge</h3>
+            <h3 className="text-sm font-bold text-[#cdd6f4]">Revit 2027 Live Pipeline Bridge</h3>
             <p className="text-xs text-[#a6adc8]">Asynchronous Background HttpListener & ExternalEvent</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <label className="flex items-center gap-1.5 text-xs text-[#a6adc8] cursor-pointer select-none">
             <input
               type="checkbox"
@@ -75,54 +106,108 @@ export default function RevitSyncStatusBadge({
               onChange={(e) => setSimulatedSync(e.target.checked)}
               className="rounded accent-[#a6e3a1]"
             />
-            <span>Virtual Revit Mode</span>
+            <span>Virtual Mode</span>
           </label>
 
           <button
             type="button"
             onClick={testConnection}
             disabled={isPinging}
-            className="text-xs bg-[#313244] hover:bg-[#45475a] text-[#89b4fa] font-semibold px-2.5 py-1 rounded border border-[#45475a] transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs bg-[#313244] hover:bg-[#45475a] text-[#89b4fa] font-semibold px-2.5 py-1.5 rounded border border-[#45475a] transition-colors cursor-pointer"
           >
-            {isPinging ? 'Pinging...' : 'Ping :8080'}
+            <Activity className="w-3.5 h-3.5" />
+            <span>{isPinging ? 'Pinging...' : `Ping :${targetPort}`}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={dispatchToRevit}
+            disabled={isSending}
+            className="flex items-center gap-1 text-xs bg-[#a6e3a1] hover:bg-[#94d98e] text-[#11111b] font-bold px-3 py-1.5 rounded transition-colors cursor-pointer shadow"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>{isSending ? 'Sending...' : '⚡ Push to Revit'}</span>
           </button>
         </div>
       </div>
 
+      {/* Ping or Send result notifications */}
       {pingResult && (
-        <div className="text-xs font-mono bg-[#11111b] border border-[#313244] p-2 rounded text-[#f9e2af] mb-3">
+        <div className="text-xs font-mono bg-[#11111b] border border-[#313244] p-2.5 rounded text-[#f9e2af]">
           {pingResult}
         </div>
       )}
 
+      {sendResult && (
+        <div className={`text-xs font-mono p-2.5 rounded border ${
+          sendResult.startsWith('✅') 
+            ? 'bg-[#a6e3a1]/10 border-[#a6e3a1]/30 text-[#a6e3a1]'
+            : 'bg-[#f38ba8]/10 border-[#f38ba8]/30 text-[#f38ba8]'
+        }`}>
+          {sendResult}
+        </div>
+      )}
+
+      {/* Status Bar */}
       <div className="bg-[#181825] p-3 rounded-lg border border-[#313244] flex items-center justify-between flex-wrap gap-2 text-xs">
         <div className="flex items-center gap-2">
           <span
             className={`w-2.5 h-2.5 rounded-full ${
               simulatedSync || syncStatus === 'connected'
-                ? 'bg-[#a6e3a1] ring-2 ring-[#a6e3a1]/30'
+                ? 'bg-[#a6e3a1] ring-2 ring-[#a6e3a1]/30 animate-pulse'
                 : 'bg-[#f9e2af]'
             }`}
           />
           <span className="text-[#a6adc8]">
-            Target:{' '}
-            <code className="text-[#cba6f7] bg-[#11111b] px-1.5 py-0.5 rounded font-mono">
-              http://localhost:8080/revit-sync/
-            </code>
+            Endpoint:{' '}
+            <a
+              href={`http://localhost:${targetPort}/revit-sync/`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#cba6f7] hover:underline bg-[#11111b] px-1.5 py-0.5 rounded font-mono inline-flex items-center gap-1"
+            >
+              <span>http://localhost:{targetPort}/revit-sync/</span>
+              <ExternalLink className="w-3 h-3 text-[#a6adc8]" />
+            </a>
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowPayload(!showPayload)}
-          className="text-[#89b4fa] hover:underline cursor-pointer font-medium"
-        >
-          {showPayload ? 'Hide Payload Spec' : 'Inspect JSON Payload'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowHelp(!showHelp)}
+            className="text-[#a6adc8] hover:text-white cursor-pointer font-medium flex items-center gap-1"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>Pipeline Guide</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowPayload(!showPayload)}
+            className="text-[#89b4fa] hover:underline cursor-pointer font-medium"
+          >
+            {showPayload ? 'Hide Payload Spec' : 'Inspect JSON Payload'}
+          </button>
+        </div>
       </div>
 
+      {/* Troubleshooting and Architecture Guide */}
+      {showHelp && (
+        <div className="bg-[#11111b] p-4 rounded-lg border border-[#313244] text-xs space-y-2 text-[#a6adc8]">
+          <h4 className="font-bold text-[#cdd6f4] text-sm">How the Revit 2027 Pipeline Works:</h4>
+          <ol className="list-decimal list-inside space-y-1">
+            <li><strong>Add-in Launch:</strong> When Revit starts, <code className="text-[#89b4fa]">App.cs</code> launches a background <code className="text-[#cba6f7]">HttpListener</code> on <code className="text-[#a6e3a1]">http://localhost:8080/revit-sync/</code> (with fallback to 8081).</li>
+            <li><strong>Direct Web Streaming:</strong> Clicking <em>Execute Multi-Agent Optimization</em> or <em>⚡ Push to Revit</em> dispatches the JSON allocations directly to that port.</li>
+            <li><strong>Thread-Safe Execution:</strong> Because Revit API forbids direct model manipulation from background threads, the add-in enqueues the payload into an <code className="text-[#cba6f7]">ExternalEvent</code> which executes an active transaction on Revit's main UI thread.</li>
+            <li><strong>Testing Endpoint:</strong> If you visit <a href={`http://localhost:${targetPort}/revit-sync/`} target="_blank" rel="noreferrer" className="text-[#89b4fa] underline">http://localhost:{targetPort}/revit-sync/</a> in your browser, the add-in serves a live status confirmation page.</li>
+          </ol>
+        </div>
+      )}
+
+      {/* JSON Payload Inspection & cURL */}
       {showPayload && (
-        <div className="mt-3 bg-[#11111b] p-3 rounded-lg border border-[#313244] text-xs font-mono">
+        <div className="bg-[#11111b] p-3 rounded-lg border border-[#313244] text-xs font-mono">
           <div className="flex items-center justify-between text-[#6c7086] mb-1.5 font-bold">
             <span>DISPATCHED JSON PAYLOAD</span>
             <button

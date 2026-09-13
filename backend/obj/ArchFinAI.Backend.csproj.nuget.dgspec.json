@@ -63,14 +63,6 @@
             "Nice3point.Revit.Api.RevitAPIUI": {
               "target": "Package",
               "version": "[2027.2.0, )"
-            },
-            "Nice3point.Revit.Extensions": {
-              "target": "Package",
-              "version": "[2027.0.4, )"
-            },
-            "Nice3point.Revit.Toolkit": {
-              "target": "Package",
-              "version": "[2027.0.0, )"
             }
           },
           "imports": [

@@ -34,7 +34,7 @@ Write-Host "      Detected .NET SDK: $dotnetVersion" -ForegroundColor Green
 Write-Host "[2/4] Building ArchFinAI.Backend ($Configuration)..." -ForegroundColor Yellow
 $buildOutput = dotnet build "$ProjectFile" -c $Configuration
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Build failed. Please verify NuGet dependencies (Nice3point.Revit.Toolkit, etc.)."
+    Write-Error "Build failed. Please verify .NET SDK and NuGet dependencies."
     exit 1
 }
 Write-Host "      Build succeeded." -ForegroundColor Green

@@ -30,38 +30,6 @@
             "related": ".xml"
           }
         }
-      },
-      "Nice3point.Revit.Extensions/2027.0.4": {
-        "type": "package",
-        "compile": {
-          "lib/net10.0-windows7.0/Nice3point.Revit.Extensions.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net10.0-windows7.0/Nice3point.Revit.Extensions.dll": {
-            "related": ".xml"
-          }
-        },
-        "frameworkReferences": [
-          "Microsoft.WindowsDesktop.App.WPF"
-        ]
-      },
-      "Nice3point.Revit.Toolkit/2027.0.0": {
-        "type": "package",
-        "compile": {
-          "lib/net10.0-windows7.0/Nice3point.Revit.Toolkit.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net10.0-windows7.0/Nice3point.Revit.Toolkit.dll": {
-            "related": ".xml"
-          }
-        },
-        "frameworkReferences": [
-          "Microsoft.WindowsDesktop.App.WPF"
-        ]
       }
     }
   },
@@ -120,53 +88,13 @@
         "ref/net10.0-windows7.0/RevitAPIUI.dll",
         "ref/net10.0-windows7.0/RevitAPIUI.xml"
       ]
-    },
-    "Nice3point.Revit.Extensions/2027.0.4": {
-      "sha512": "IjeZYzE0IDO1B7ZrAA+DH4+ymac3ekZ7EKATsomfB9dF3P+Qe6q+1bDZcnRqWvxRdNmrKcAvIAZ8+OlfVwJ2Sw==",
-      "type": "package",
-      "path": "nice3point.revit.extensions/2027.0.4",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "LICENSE.md",
-        "README.md",
-        "images/PackageIcon.png",
-        "lib/net10.0-windows7.0/Nice3point.Revit.Extensions.dll",
-        "lib/net10.0-windows7.0/Nice3point.Revit.Extensions.xml",
-        "nice3point.revit.extensions.2027.0.4.nupkg.sha512",
-        "nice3point.revit.extensions.nuspec"
-      ]
-    },
-    "Nice3point.Revit.Toolkit/2027.0.0": {
-      "sha512": "kAUZtgXMWZkRJQTacJmUyI17M3iga9iqdnZ6+Frk1ScIkPjlasyXPn6U+xafO4ayH2V3LtBOBgJSxcTzK08ssg==",
-      "type": "package",
-      "path": "nice3point.revit.toolkit/2027.0.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "License.md",
-        "Readme.md",
-        "analyzers/dotnet/roslyn4.14/cs/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.dll",
-        "analyzers/dotnet/roslyn4.14/cs/Nice3point.Revit.Toolkit.Analyzers.dll",
-        "analyzers/dotnet/roslyn4.14/cs/Nice3point.Revit.Toolkit.SourceGenerators.dll",
-        "analyzers/dotnet/roslyn5.0/cs/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.dll",
-        "analyzers/dotnet/roslyn5.0/cs/Nice3point.Revit.Toolkit.Analyzers.dll",
-        "analyzers/dotnet/roslyn5.0/cs/Nice3point.Revit.Toolkit.SourceGenerators.dll",
-        "images/PackageIcon.png",
-        "lib/net10.0-windows7.0/Nice3point.Revit.Toolkit.dll",
-        "lib/net10.0-windows7.0/Nice3point.Revit.Toolkit.xml",
-        "nice3point.revit.toolkit.2027.0.0.nupkg.sha512",
-        "nice3point.revit.toolkit.nuspec"
-      ]
     }
   },
   "projectFileDependencyGroups": {
     "net10.0-windows7.0": [
       "JetBrains.Annotations >= 2024.2.0",
       "Nice3point.Revit.Api.RevitAPI >= 2027.2.0",
-      "Nice3point.Revit.Api.RevitAPIUI >= 2027.2.0",
-      "Nice3point.Revit.Extensions >= 2027.0.4",
-      "Nice3point.Revit.Toolkit >= 2027.0.0"
+      "Nice3point.Revit.Api.RevitAPIUI >= 2027.2.0"
     ]
   },
   "packageFolders": {
@@ -232,14 +160,6 @@
           "Nice3point.Revit.Api.RevitAPIUI": {
             "target": "Package",
             "version": "[2027.2.0, )"
-          },
-          "Nice3point.Revit.Extensions": {
-            "target": "Package",
-            "version": "[2027.0.4, )"
-          },
-          "Nice3point.Revit.Toolkit": {
-            "target": "Package",
-            "version": "[2027.0.0, )"
           }
         },
         "imports": [

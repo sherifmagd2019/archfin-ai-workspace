@@ -1,6 +1,6 @@
 # ArchFin AI: Backend (Revit 2027 Add-in)
 
-Computational architectural engineering backend for Autodesk Revit 2027, powered by .NET 10 and the [Nice3point](https://github.com/Nice3point) Revit API framework templates.
+Computational architectural engineering backend for Autodesk Revit 2027, built on native Autodesk Revit API and .NET 10 (`net10.0-windows7.0`) with zero external runtime dependencies.
 
 ## Architecture Overview
 
@@ -19,17 +19,17 @@ Computational architectural engineering backend for Autodesk Revit 2027, powered
 
 ### Key Components
 
-1. **`App.cs` (`ExternalApplication`)**:
-   - Nice3point Application entry point.
+1. **`App.cs` (`IExternalApplication`)**:
+   - Native Autodesk Revit `IExternalApplication` entry point.
    - Registers custom Ribbon Tab `"ArchFin Agent"` and `"Agentic Controls"` panel.
    - Registers non-modal `AgentDashboardDockablePane` (`DockablePaneId`).
    - Starts asynchronous background `HttpListener` on `http://localhost:8080/revit-sync/` with full CORS preflight support.
 
-2. **`Commands/LaunchDashboardCommand.cs` (`ExternalCommand`)**:
-   - Nice3point Ribbon PushButton action that launches the default web browser to the React dashboard (`http://localhost:3000`).
+2. **`Commands/LaunchDashboardCommand.cs` (`IExternalCommand`)**:
+   - Native Revit Ribbon PushButton action that launches the default web browser to the React dashboard (`http://localhost:3000`).
 
-3. **`Commands/ShowDockablePaneCommand.cs` (`ExternalCommand`)**:
-   - Ribbon PushButton action that toggles visibility of the live agent telemetry dockable pane.
+3. **`Commands/ShowDockablePaneCommand.cs` (`IExternalCommand`)**:
+   - Native Revit Ribbon PushButton action that toggles visibility of the live agent telemetry dockable pane.
 
 4. **`Services/RevitModelUpdater.cs` (`IExternalEventHandler`)**:
    - Safely executes model mutations on Revit's main API thread inside an encapsulated `Transaction`.
@@ -41,8 +41,8 @@ Computational architectural engineering backend for Autodesk Revit 2027, powered
 ## Building & Installation
 
 ### Prerequisites
-- **For Revit 2027**: .NET 10 SDK (x64) — Nice3point 2027 packages target `net10.0-windows7.0`
-- **For Revit 2025/2026**: .NET 8 SDK (x64) — use Nice3point 2025.x packages with `net8.0-windows7.0`
+- **For Revit 2027**: .NET 10 SDK (x64) (`net10.0-windows7.0`)
+- **For Revit 2025/2026**: .NET 8 SDK (x64) (`net8.0-windows7.0`)
 - Autodesk Revit 2027
 - Visual Studio 2022 (v17.12+) or Visual Studio 2025 / JetBrains Rider with .NET desktop development workload
 

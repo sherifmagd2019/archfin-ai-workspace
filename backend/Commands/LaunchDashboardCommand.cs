@@ -4,14 +4,13 @@ using System.Diagnostics;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Nice3point.Revit.Toolkit.External;
 
 namespace ArchFinAI.Backend.Commands
 {
     [Transaction(TransactionMode.Manual)]
-    public class LaunchDashboardCommand : ExternalCommand
+    public class LaunchDashboardCommand : IExternalCommand
     {
-        public override void Execute()
+        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             try
             {
@@ -25,10 +24,13 @@ namespace ArchFinAI.Backend.Commands
                 Process.Start(processInfo);
 
                 TaskDialog.Show("ArchFin AI", $"Optimization Dashboard launched at:\n{dashboardUrl}\n\nRevit sync pipeline active on port 8080.");
+                return Result.Succeeded;
             }
             catch (Exception ex)
             {
+                message = ex.Message;
                 TaskDialog.Show("ArchFin AI Error", $"Failed to open browser: {ex.Message}");
+                return Result.Failed;
             }
         }
     }

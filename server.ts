@@ -51,6 +51,50 @@ async function startServer() {
     }
   });
 
+  // Revit 2027 Bridge Proxy / Relay routes
+  app.get('/api/revit-sync/status', async (req, res) => {
+    const port = req.query.port || 8080;
+    const targetUrl = `http://127.0.0.1:${port}/revit-sync/`;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 1500);
+      const revitRes = await fetch(targetUrl, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      const data = await revitRes.json().catch(() => ({ status: 'online' }));
+      res.json({ online: true, port: Number(port), data });
+    } catch (err: any) {
+      res.json({ online: false, port: Number(port), error: err.message });
+    }
+  });
+
+  app.post('/api/revit-sync', async (req, res) => {
+    const port = req.query.port || 8080;
+    const targetUrl = `http://127.0.0.1:${port}/revit-sync/`;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2500);
+      const revitRes = await fetch(targetUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(req.body),
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      const data = await revitRes.json().catch(() => ({ status: 'success' }));
+      res.json({ relayed: true, port: Number(port), revitResponse: data });
+    } catch (err: any) {
+      res.status(502).json({
+        relayed: false,
+        port: Number(port),
+        error: `Revit 2027 not reachable at ${targetUrl}: ${err.message}`
+      });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

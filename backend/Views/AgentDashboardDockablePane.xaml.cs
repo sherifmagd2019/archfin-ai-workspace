@@ -29,6 +29,30 @@ namespace ArchFinAI.Backend.Views
             };
         }
 
+        public void Log(string message)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TxtConsoleLog.AppendText($"\n[{DateTime.Now:HH:mm:ss}] {message}");
+                TxtConsoleLog.ScrollToEnd();
+            });
+        }
+
+        public void SetServerStatus(string endpointUrl, bool isOnline, string? errorDetail = null)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (isOnline)
+                {
+                    TxtConsoleLog.Text = $"[ArchFin Agent] ✅ Server Online on {endpointUrl}\n[Revit] ExternalEvent handler initialized\n[Status] Ready for React MPT payloads...";
+                }
+                else
+                {
+                    TxtConsoleLog.Text = $"[ArchFin Agent] ❌ Listener Error on {endpointUrl}\n[Detail] {errorDetail ?? "Port in use or access denied"}\n[Fix] Try running Revit as Administrator or check for port conflicts.";
+                }
+            });
+        }
+
         public void UpdateAllocation(UrbanAllocationPayload payload)
         {
             _lastPayload = payload;

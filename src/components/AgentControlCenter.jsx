@@ -21,6 +21,7 @@ import {
   Building2
 } from 'lucide-react';
 import InterAgentDialogueViewer from './InterAgentDialogueViewer';
+import { syncAllocationToRevit } from '../utils/revitBridge';
 
 export const NEMOTRON_MODELS = [
   {
@@ -229,7 +230,28 @@ export default function AgentControlCenter({ onPipelineUpdate, pipelineState, si
         timestamp: new Date().toLocaleTimeString()
       });
 
-      setAgentStatus(`✅ Multi-Agent Optimization Complete (${data.compliance?.iterationsNeeded || 1} loops). Ready for Revit sync.`);
+      const revitPayload = data.revitPayload || {
+        residential: finalRes,
+        commercial: finalComm,
+        industrial: finalInd,
+        alertText: data.narrative || "Multi-Agent MPT Optimization Complete",
+        targetFar: config.targetFar,
+        sharpeRatio: data.metrics?.sharpeRatio,
+        timestamp: new Date().toISOString()
+      };
+
+      let syncOutcome = null;
+      if (!simulatedSync) {
+        setAgentStatus("⚡ Dispatched MPT payload to Autodesk Revit 2027 bridge (:8080)...");
+        syncOutcome = await syncAllocationToRevit(revitPayload);
+        if (syncOutcome.success) {
+          setAgentStatus(`✅ Revit 2027 canvas synced on port ${syncOutcome.port} (${syncOutcome.channel})!`);
+        } else {
+          setAgentStatus(`⚠️ Optimized. Revit bridge offline on :8080/8081 (using Virtual mode).`);
+        }
+      } else {
+        setAgentStatus(`✅ Multi-Agent Optimization Complete (${data.compliance?.iterationsNeeded || 1} loops). Virtual Revit Mode.`);
+      }
 
       onPipelineUpdate(prev => ({
         ...prev,
@@ -239,17 +261,9 @@ export default function AgentControlCenter({ onPipelineUpdate, pipelineState, si
         covarianceMatrix: data.adjustedCovariance || prev.covarianceMatrix,
         dialogue: data.dialogue || [],
         compliance: data.compliance,
-        lastPayload: data.revitPayload || {
-          residential: finalRes,
-          commercial: finalComm,
-          industrial: finalInd,
-          alertText: data.narrative,
-          targetFar: config.targetFar,
-          sharpeRatio: data.metrics?.sharpeRatio,
-          timestamp: new Date().toISOString()
-        },
-        statusText: "Completed",
-        syncStatus: 'connected'
+        lastPayload: revitPayload,
+        statusText: syncOutcome?.success ? "Synced with Revit 2027" : "Completed",
+        syncStatus: syncOutcome?.success ? 'connected' : (simulatedSync ? 'connected' : 'disconnected')
       }));
 
     } catch (apiError) {
@@ -388,22 +402,38 @@ export default function AgentControlCenter({ onPipelineUpdate, pipelineState, si
     const newAlloc = { Res: resPct.toFixed(1), Comm: commPct.toFixed(1), Ind: indPct.toFixed(1) };
     setAllocationResults(newAlloc);
     setActiveDialogue(dialogueTrace);
-    setAgentStatus(`✅ Local Multi-Agent Optimization Complete. Allocations synced.`);
+
+    const revitPayload = {
+      residential: newAlloc.Res,
+      commercial: newAlloc.Comm,
+      industrial: newAlloc.Ind,
+      alertText: narrative,
+      targetFar: config.targetFar,
+      sharpeRatio: 1.88,
+      timestamp: new Date().toISOString()
+    };
+
+    let syncOutcome = null;
+    if (!simulatedSync) {
+      setAgentStatus("⚡ Dispatched MPT payload to Autodesk Revit 2027 bridge (:8080)...");
+      syncOutcome = await syncAllocationToRevit(revitPayload);
+      if (syncOutcome.success) {
+        setAgentStatus(`✅ Revit 2027 synced on port ${syncOutcome.port} (${syncOutcome.channel})!`);
+      } else {
+        setAgentStatus(`✅ Local Optimization Complete. Revit offline on :8080 (using Virtual mode).`);
+      }
+    } else {
+      setAgentStatus(`✅ Local Multi-Agent Optimization Complete. Allocations synced.`);
+    }
 
     onPipelineUpdate(prev => ({
       ...prev,
       currentStep: 4,
       allocations: newAlloc,
       dialogue: dialogueTrace,
-      lastPayload: {
-        residential: newAlloc.Res,
-        commercial: newAlloc.Comm,
-        industrial: newAlloc.Ind,
-        alertText: narrative,
-        targetFar: config.targetFar,
-        sharpeRatio: 1.88,
-        timestamp: new Date().toISOString()
-      }
+      lastPayload: revitPayload,
+      statusText: syncOutcome?.success ? "Synced with Revit 2027" : "Completed",
+      syncStatus: syncOutcome?.success ? 'connected' : (simulatedSync ? 'connected' : 'disconnected')
     }));
   };
 

@@ -1,14 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "8xkHMVX9cGU=",
+  "dgSpecHash": "EfS1rS1Epd4=",
   "success": true,
   "projectFilePath": "J:\\WorldQuant  FM\\PAPAER\\Hakathons\\archfin-ai_-bim-mpt-urban-optimize_github\\backend\\ArchFinAI.Backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Sherif\\.nuget\\packages\\jetbrains.annotations\\2024.2.0\\jetbrains.annotations.2024.2.0.nupkg.sha512",
     "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.api.revitapi\\2027.2.0\\nice3point.revit.api.revitapi.2027.2.0.nupkg.sha512",
-    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.api.revitapiui\\2027.2.0\\nice3point.revit.api.revitapiui.2027.2.0.nupkg.sha512",
-    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.extensions\\2027.0.4\\nice3point.revit.extensions.2027.0.4.nupkg.sha512",
-    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.toolkit\\2027.0.0\\nice3point.revit.toolkit.2027.0.0.nupkg.sha512"
+    "C:\\Users\\Sherif\\.nuget\\packages\\nice3point.revit.api.revitapiui\\2027.2.0\\nice3point.revit.api.revitapiui.2027.2.0.nupkg.sha512"
   ],
   "logs": []
 }
