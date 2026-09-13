@@ -64,6 +64,14 @@ async function startServer() {
         signal: controller.signal
       });
       clearTimeout(timeout);
+      if (!revitRes.ok) {
+        return res.json({
+          online: false,
+          port: Number(port),
+          status: revitRes.status,
+          error: `HTTP ${revitRes.status}: ${revitRes.statusText || 'Endpoint unavailable'}`
+        });
+      }
       const data = await revitRes.json().catch(() => ({ status: 'online' }));
       res.json({ online: true, port: Number(port), data });
     } catch (err: any) {
@@ -84,6 +92,14 @@ async function startServer() {
         signal: controller.signal
       });
       clearTimeout(timeout);
+      if (!revitRes.ok) {
+        return res.status(502).json({
+          relayed: false,
+          port: Number(port),
+          status: revitRes.status,
+          error: `Revit endpoint returned HTTP ${revitRes.status}: ${revitRes.statusText || 'Service Unavailable'}`
+        });
+      }
       const data = await revitRes.json().catch(() => ({ status: 'success' }));
       res.json({ relayed: true, port: Number(port), revitResponse: data });
     } catch (err: any) {

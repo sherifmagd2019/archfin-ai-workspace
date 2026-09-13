@@ -5,43 +5,19 @@
  * seamless backend relay proxy for HTTPS/Cloud preview environments.
  */
 
-const CANDIDATE_PORTS = [8080, 8081, 8082, 8085];
+const CANDIDATE_PORTS = [8080, 8081, 8082, 8085, 8765];
 
 /**
  * Pings candidate ports to discover if the Revit 2027 Add-in is running and listening.
  */
 export async function pingRevitBridge(targetPort = 8080) {
-  const portsToTry = targetPort ? [targetPort, ...CANDIDATE_PORTS.filter(p => p !== targetPort)] : CANDIDATE_PORTS;
+  const portsToTry = targetPort 
+    ? [Number(targetPort), ...CANDIDATE_PORTS.filter(p => p !== Number(targetPort))] 
+    : CANDIDATE_PORTS;
   const attempts = [];
 
   for (const port of portsToTry) {
-    // 1. Direct browser fetch to localhost
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1200);
-
-      const res = await fetch(`http://localhost:${port}/revit-sync/`, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
-        return {
-          online: true,
-          port,
-          mode: 'direct',
-          url: `http://localhost:${port}/revit-sync/`,
-          data
-        };
-      }
-    } catch (directErr) {
-      attempts.push(`direct :${port} (${directErr.message || 'offline'})`);
-    }
-
-    // 2. Direct browser fetch to 127.0.0.1 (in case localhost IPv6 resolution is tricky)
+    // 1. Direct browser fetch to 127.0.0.1 (IPv4 loopback bypasses DNS/IPv6 delays)
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1200);
@@ -53,7 +29,7 @@ export async function pingRevitBridge(targetPort = 8080) {
       });
       clearTimeout(timeoutId);
 
-      if (res.ok) {
+      if (res.ok && res.status === 200) {
         const data = await res.json().catch(() => ({}));
         return {
           online: true,
@@ -62,6 +38,36 @@ export async function pingRevitBridge(targetPort = 8080) {
           url: `http://127.0.0.1:${port}/revit-sync/`,
           data
         };
+      } else {
+        attempts.push(`127.0.0.1:${port} returned HTTP ${res.status}`);
+      }
+    } catch (directErr) {
+      attempts.push(`127.0.0.1:${port} (${directErr.message || 'offline'})`);
+    }
+
+    // 2. Direct browser fetch to localhost
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+      const res = await fetch(`http://localhost:${port}/revit-sync/`, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok && res.status === 200) {
+        const data = await res.json().catch(() => ({}));
+        return {
+          online: true,
+          port,
+          mode: 'direct-localhost',
+          url: `http://localhost:${port}/revit-sync/`,
+          data
+        };
+      } else {
+        attempts.push(`localhost:${port} returned HTTP ${res.status}`);
       }
     } catch {
       // ignore
@@ -80,6 +86,8 @@ export async function pingRevitBridge(targetPort = 8080) {
             url: `http://localhost:${port}/revit-sync/`,
             data
           };
+        } else if (data.status) {
+          attempts.push(`proxy :${port} HTTP ${data.status}`);
         }
       }
     } catch {
@@ -90,7 +98,7 @@ export async function pingRevitBridge(targetPort = 8080) {
   return {
     online: false,
     attempts,
-    defaultPort: targetPort || 8080
+    defaultPort: Number(targetPort) || 8080
   };
 }
 

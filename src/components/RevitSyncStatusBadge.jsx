@@ -99,6 +99,25 @@ export default function RevitSyncStatusBadge({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Port Selector */}
+          <div className="flex items-center gap-1 bg-[#11111b] p-1 rounded border border-[#313244] text-xs">
+            <span className="text-[#a6adc8] px-1 font-mono text-[11px]">Port:</span>
+            {[8080, 8081, 8082, 8765].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setTargetPort(p)}
+                className={`px-1.5 py-0.5 rounded font-mono text-[11px] transition-colors cursor-pointer ${
+                  targetPort === p
+                    ? 'bg-[#89b4fa] text-[#11111b] font-bold'
+                    : 'text-[#a6adc8] hover:text-white'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
           <label className="flex items-center gap-1.5 text-xs text-[#a6adc8] cursor-pointer select-none">
             <input
               type="checkbox"
@@ -106,7 +125,7 @@ export default function RevitSyncStatusBadge({
               onChange={(e) => setSimulatedSync(e.target.checked)}
               className="rounded accent-[#a6e3a1]"
             />
-            <span>Virtual Mode</span>
+            <span>Virtual</span>
           </label>
 
           <button
@@ -114,6 +133,7 @@ export default function RevitSyncStatusBadge({
             onClick={testConnection}
             disabled={isPinging}
             className="flex items-center gap-1 text-xs bg-[#313244] hover:bg-[#45475a] text-[#89b4fa] font-semibold px-2.5 py-1.5 rounded border border-[#45475a] transition-colors cursor-pointer"
+            title="Scan and ping Revit 2027 bridge"
           >
             <Activity className="w-3.5 h-3.5" />
             <span>{isPinging ? 'Pinging...' : `Ping :${targetPort}`}</span>

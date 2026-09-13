@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace ArchFinAI.Backend
     [UsedImplicitly]
     public class App : IExternalApplication
     {
-        private HttpListener? _listener;
+        private TcpListener? _tcpListener;
         private bool _listening = true;
 
         // Singleton reference for UI callbacks
@@ -92,7 +93,7 @@ namespace ArchFinAI.Backend
             panel.AddItem(launchBtnData);
             panel.AddItem(inspectorBtnData);
 
-            // 4. Spin up an asynchronous background thread for receiving layout payloads from React frontend
+            // 4. Spin up high-reliability embedded TCP HTTP server (bypasses Windows http.sys / urlacl constraints)
             StartLocalServer();
 
             return Result.Succeeded;
@@ -115,7 +116,7 @@ namespace ArchFinAI.Backend
 
         private void StartLocalServer()
         {
-            int[] candidatePorts = new[] { 8080, 8081, 8082, 8085 };
+            int[] candidatePorts = new[] { 8080, 8081, 8082, 8085, 8765 };
             bool started = false;
             string lastError = string.Empty;
 
@@ -123,65 +124,109 @@ namespace ArchFinAI.Backend
             {
                 try
                 {
-                    _listener = new HttpListener();
-                    _listener.Prefixes.Add($"http://localhost:{port}/");
-                    _listener.Prefixes.Add($"http://127.0.0.1:{port}/");
-                    _listener.Prefixes.Add($"http://localhost:{port}/revit-sync/");
-                    _listener.Prefixes.Add($"http://127.0.0.1:{port}/revit-sync/");
-
-                    _listener.Start();
+                    _tcpListener = new TcpListener(IPAddress.Any, port);
+                    _tcpListener.Start();
                     ActivePort = port;
                     started = true;
-                    Task.Run(() => ListenLoop(port));
+                    Task.Run(() => AcceptTcpClientsLoop(_tcpListener, port));
                     
                     DockablePaneView?.SetServerStatus($"http://localhost:{port}/revit-sync/", true);
-                    DockablePaneView?.Log($"✅ HTTP Listener active on port {port}. Ready for React MPT sync.");
-                    Console.WriteLine($"[ArchFin] Local Revit sync server started on port {port}");
+                    DockablePaneView?.Log($"✅ TCP HTTP Server listening on port {port}. Ready for React MPT sync.");
+                    Console.WriteLine($"[ArchFin] Embedded TCP server listening on port {port}");
                     break;
                 }
                 catch (Exception ex)
                 {
                     lastError = ex.Message;
-                    try { _listener?.Close(); } catch { }
-                    _listener = null;
+                    try { _tcpListener?.Stop(); } catch { }
+                    _tcpListener = null;
                 }
             }
 
             if (!started)
             {
                 DockablePaneView?.SetServerStatus("http://localhost:8080/revit-sync/", false, lastError);
-                Console.WriteLine($"[ArchFin] Failed to start HttpListener on candidate ports: {lastError}");
+                Console.WriteLine($"[ArchFin] Failed to bind TCP listener on candidate ports: {lastError}");
             }
         }
 
-        private async Task ListenLoop(int port)
+        private async Task AcceptTcpClientsLoop(TcpListener listener, int port)
         {
-            while (_listening && _listener != null && _listener.IsListening)
+            while (_listening)
             {
                 try
                 {
-                    var context = await _listener.GetContextAsync();
-                    var request = context.Request;
-                    var response = context.Response;
+                    var client = await listener.AcceptTcpClientAsync();
+                    _ = Task.Run(() => ProcessHttpClient(client, port));
+                }
+                catch (Exception ex)
+                {
+                    if (!_listening) break;
+                    DockablePaneView?.Log($"Accept error: {ex.Message}");
+                    await Task.Delay(100);
+                }
+            }
+        }
 
-                    AddCorsHeaders(response);
+        private async Task ProcessHttpClient(TcpClient client, int port)
+        {
+            try
+            {
+                using (client)
+                using (var stream = client.GetStream())
+                using (var reader = new StreamReader(stream, Encoding.UTF8, false, 8192, leaveOpen: true))
+                {
+                    string? requestLine = await reader.ReadLineAsync();
+                    if (string.IsNullOrEmpty(requestLine)) return;
 
-                    // 1. Handle CORS Preflight OPTIONS
-                    if (request.HttpMethod.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+                    var parts = requestLine.Split(' ');
+                    string method = parts.Length > 0 ? parts[0].ToUpperInvariant() : "GET";
+                    string url = parts.Length > 1 ? parts[1] : "/";
+
+                    int contentLength = 0;
+                    bool acceptsHtml = false;
+                    string? headerLine;
+                    while (!string.IsNullOrEmpty(headerLine = await reader.ReadLineAsync()))
                     {
-                        response.StatusCode = (int)HttpStatusCode.OK;
-                        response.Close();
-                        continue;
+                        if (headerLine.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            int.TryParse(headerLine.Substring(15).Trim(), out contentLength);
+                        }
+                        else if (headerLine.StartsWith("Accept:", StringComparison.OrdinalIgnoreCase) &&
+                                 headerLine.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+                        {
+                            acceptsHtml = true;
+                        }
                     }
 
-                    // 2. Handle GET requests (Browser diagnostic & health check)
-                    if (request.HttpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
+                    string body = string.Empty;
+                    if (contentLength > 0)
                     {
-                        DockablePaneView?.Log($"Health check ping received from {request.RemoteEndPoint?.Address}");
-
-                        string acceptHeader = request.Headers["Accept"] ?? string.Empty;
-                        if (acceptHeader.Contains("text/html"))
+                        char[] buffer = new char[contentLength];
+                        int totalRead = 0;
+                        while (totalRead < contentLength)
                         {
+                            int read = await reader.ReadAsync(buffer, totalRead, contentLength - totalRead);
+                            if (read <= 0) break;
+                            totalRead += read;
+                        }
+                        body = new string(buffer, 0, totalRead);
+                    }
+
+                    byte[] responseBodyBytes;
+                    string contentType = "application/json; charset=utf-8";
+
+                    if (method == "OPTIONS")
+                    {
+                        responseBodyBytes = Array.Empty<byte>();
+                    }
+                    else if (method == "GET")
+                    {
+                        DockablePaneView?.Log($"Health check ping received via GET {url}");
+
+                        if (acceptsHtml)
+                        {
+                            contentType = "text/html; charset=utf-8";
                             string html = $@"<!DOCTYPE html>
 <html>
 <head>
@@ -207,92 +252,78 @@ namespace ArchFinAI.Backend
     </div>
 </body>
 </html>";
-                            var htmlBytes = Encoding.UTF8.GetBytes(html);
-                            response.ContentType = "text/html; charset=utf-8";
-                            response.ContentLength64 = htmlBytes.Length;
-                            await response.OutputStream.WriteAsync(htmlBytes, 0, htmlBytes.Length);
-                            response.OutputStream.Close();
-                            continue;
+                            responseBodyBytes = Encoding.UTF8.GetBytes(html);
+                        }
+                        else
+                        {
+                            var health = new
+                            {
+                                status = "online",
+                                service = "ArchFin AI: BIM MPT Revit 2027 Bridge",
+                                port = port,
+                                endpoint = "/revit-sync/",
+                                ready = true,
+                                timestamp = DateTime.UtcNow.ToString("o")
+                            };
+                            responseBodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(health));
+                        }
+                    }
+                    else // POST
+                    {
+                        UrbanAllocationPayload? payload = null;
+                        try
+                        {
+                            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                            payload = JsonSerializer.Deserialize<UrbanAllocationPayload>(body, options);
+                        }
+                        catch (Exception jsonEx)
+                        {
+                            DockablePaneView?.Log($"JSON parse warning: {jsonEx.Message}");
                         }
 
-                        var healthJson = JsonSerializer.Serialize(new
+                        if (payload != null)
                         {
-                            status = "online",
-                            service = "ArchFin AI: BIM MPT Revit 2027 Bridge",
+                            DockablePaneView?.Dispatcher.Invoke(() =>
+                            {
+                                DockablePaneView.UpdateAllocation(payload);
+                            });
+
+                            RevitModelUpdater.QueueAllocationUpdate(payload);
+                            DockablePaneView?.Log($"✅ Dispatched MPT allocation to Revit canvas: Res={payload.GetResidentialPercent():F1}%, Comm={payload.GetCommercialPercent():F1}%, Ind={payload.GetIndustrialPercent():F1}%");
+                        }
+
+                        var responseObj = new
+                        {
+                            status = "success",
+                            message = "Revit canvas structural synchronization executed successfully.",
                             port = port,
-                            endpoint = $"/revit-sync/",
-                            ready = true,
-                            timestamp = DateTime.UtcNow.ToString("o")
-                        });
-                        var jsonBytes = Encoding.UTF8.GetBytes(healthJson);
-                        response.ContentType = "application/json";
-                        response.ContentLength64 = jsonBytes.Length;
-                        await response.OutputStream.WriteAsync(jsonBytes, 0, jsonBytes.Length);
-                        response.OutputStream.Close();
-                        continue;
+                            appliedAt = DateTime.UtcNow.ToString("o"),
+                            receivedPayload = payload
+                        };
+                        responseBodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(responseObj));
                     }
 
-                    // 3. Handle POST request (Incoming MPT payload from React frontend)
-                    using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
-                    string jsonPayload = await reader.ReadToEndAsync();
+                    string responseHeader = "HTTP/1.1 200 OK\r\n" +
+                                           $"Content-Type: {contentType}\r\n" +
+                                           $"Content-Length: {responseBodyBytes.Length}\r\n" +
+                                           "Access-Control-Allow-Origin: *\r\n" +
+                                           "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n" +
+                                           "Access-Control-Allow-Headers: Content-Type, Accept, Authorization, X-Requested-With\r\n" +
+                                           "Connection: close\r\n\r\n";
 
-                    UrbanAllocationPayload? payload = null;
-                    try
+                    byte[] headerBytes = Encoding.UTF8.GetBytes(responseHeader);
+                    await stream.WriteAsync(headerBytes, 0, headerBytes.Length);
+                    if (responseBodyBytes.Length > 0)
                     {
-                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                        payload = JsonSerializer.Deserialize<UrbanAllocationPayload>(jsonPayload, options);
+                        await stream.WriteAsync(responseBodyBytes, 0, responseBodyBytes.Length);
                     }
-                    catch (Exception jsonEx)
-                    {
-                        DockablePaneView?.Log($"JSON parse warning: {jsonEx.Message}");
-                    }
-
-                    if (payload != null)
-                    {
-                        // Update the WPF DockablePane on UI thread
-                        DockablePaneView?.Dispatcher.Invoke(() =>
-                        {
-                            DockablePaneView.UpdateAllocation(payload);
-                        });
-
-                        // Dispatch transaction to Revit API main thread via ExternalEvent
-                        RevitModelUpdater.QueueAllocationUpdate(payload);
-                    }
-
-                    // Respond to React frontend
-                    var responseData = new
-                    {
-                        status = "success",
-                        message = "Revit canvas structural synchronization executed successfully.",
-                        port = port,
-                        appliedAt = DateTime.UtcNow.ToString("o"),
-                        receivedPayload = payload
-                    };
-                    string responseJson = JsonSerializer.Serialize(responseData);
-                    var responseBuffer = Encoding.UTF8.GetBytes(responseJson);
-
-                    response.ContentType = "application/json";
-                    response.ContentLength64 = responseBuffer.Length;
-                    await response.OutputStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
-                    response.OutputStream.Close();
-                }
-                catch (HttpListenerException)
-                {
-                    // Listener stopped during shutdown
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    DockablePaneView?.Log($"Listen loop warning: {ex.Message}");
+                    await stream.FlushAsync();
                 }
             }
-        }
-
-        private static void AddCorsHeaders(HttpListenerResponse response)
-        {
-            response.Headers.Add("Access-Control-Allow-Origin", "*");
-            response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-            response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Requested-With");
+            catch (Exception ex)
+            {
+                DockablePaneView?.Log($"Client handler warning: {ex.Message}");
+            }
         }
 
         public Result OnShutdown(UIControlledApplication application)
@@ -300,8 +331,7 @@ namespace ArchFinAI.Backend
             _listening = false;
             try
             {
-                _listener?.Stop();
-                _listener?.Close();
+                _tcpListener?.Stop();
             }
             catch (Exception ex)
             {
@@ -312,3 +342,4 @@ namespace ArchFinAI.Backend
         }
     }
 }
+
